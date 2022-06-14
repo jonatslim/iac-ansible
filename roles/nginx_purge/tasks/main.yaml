@@ -1,0 +1,16 @@
+# for ubuntu" service  --status-all" will show all services
+- name: Stop Nginx Services
+  service:
+    name: "{{ item }}"
+    state: stopped
+  with_items:
+    - nginx
+  ignore_errors: yes
+- name: Remove Nginx
+  apt:
+    name: "{{ item }}"
+    state: absent
+    purge: yes
+  # items is for loop.
+  with_items:
+    - nginx

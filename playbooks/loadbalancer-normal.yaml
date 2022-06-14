@@ -1,0 +1,27 @@
+# for all 'load balancers' in inventory.ini
+- hosts: loadbalancer
+  become: yes
+  # do nto gather facts for faster runs
+  gather_facts: no
+  # roles install the nginx found ..\roles\nginx\tasks. I think roles are useless. better use playbook instead.
+  roles:
+    - ./../roles/nginx
+    - ./../roles/docker
+  tasks:
+    - name: Add Nginx Config
+      template:
+        src: ../templates/nginx.conf
+        dest: /etc/nginx/sites-available/default
+      # notify-handlers notify somthing once a task is compelte
+      notify: reload nginx
+    - name: Enable New Nginx Config
+      file:
+        dest: /etc/nginx/sites-enabled/default
+        src: /etc/nginx/sites-available/default
+        state: link
+  #noitfy-handlers notify somthing once a task is compelte
+  handlers:
+    - name: reload nginx
+      service:
+        name: nginx
+        state: reloaded

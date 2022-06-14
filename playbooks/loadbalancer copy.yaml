@@ -1,0 +1,48 @@
+
+# for load balancer
+- hosts: loadbalancer
+  become: yes
+  # do nto gather facts for faster runs
+  gather_facts: no
+  # install dockers and remove nginx from server
+  roles:
+    - ./../roles/nginx_purge
+    - ./../roles/docker
+  tasks:
+    # create directory
+    - name: Verify /var/www/ exists
+      file:
+        path: /var/www
+        state: directory
+        mode: 0755
+    # copy conf file to server directory
+    - name: Add Nginx Config
+      template:
+        src: ./../templates/nginx.conf
+        dest: /var/www/nginx.conf
+    # is the docker running ? if yes, output will be error. If not, output will be the list of containers
+    - name: Has Running Docker Images ?
+    # >/dev/null 2>&1 is to stop screen output.
+      shell: docker ps -aq >/dev/null 2>&1
+      # capture output in a variable "containers_running"
+      register: containers_running
+      # ignoring error outputs
+      ignore_errors: yes
+    # since capture is successfull, rc = 0.
+    - debug: msg=”{{ containers_running }}”
+    # stop all the docker containers that are running ...
+    - name: Stopping Dockers Containers, if any.
+      when: containers_running.rc == 0
+      shell: docker stop $(docker ps -aq)
+    # remove the containers
+    - name: Removing Dockers Containers, if any.
+      when: containers_running.rc == 0
+      shell: docker rm $(docker ps -aq)
+    # run a nginx docker container
+    - name: Run Docker-based Nginx
+      shell: |
+        docker run \
+        --restart always \
+        -v /var/www/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+        -p 80:80 \
+        -d nginx

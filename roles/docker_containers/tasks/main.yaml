@@ -1,0 +1,8 @@
+# is the docker running ? if yes, output will be error. If not, output will be the list of containers
+- name: Has Running Docker Images ?
+# >/dev/null 2>&1 is to stop screen output.
+  shell: docker ps -aq >/dev/null 2>&1
+  # capture output in a variable "containers_running"
+  register: containers_running
+  # ignoring error outputs
+  ignore_errors: yes

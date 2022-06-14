@@ -1,0 +1,55 @@
+# ansible main.yaml file.
+---
+- hosts: webapps
+  become: yes
+  # do nto gather facts for faster runs
+  #gather_facts: no
+  #vars are the variables used in a template
+  vars:
+    title: Hello there
+    description: Some more news!
+  tasks:
+    # apt - install sofwares
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+    - name: Update Nginx Default Homepage
+      # use template to copy files into destination
+      template:
+        dest: /var/www/html/index.nginx-debian.html
+        src: ./templates/nginx.default.html
+      # copying files from one location to another
+#      copy:
+ #       dest: /var/www/html/index.nginx-debian.html
+  #      src: ./templates/nginx.default.html
+      # copy putting texts into a file.
+#      copy:
+#        dest: /var/www/html/index.nginx-debian.html
+ #       content: |
+  #        <h1> {{ title }} </h1>
+   #       <p>{{ description }}</p>
+
+# for all 'load balancers' in inventory.ini
+- hosts: loadbalancer
+  become: yes
+  tasks:
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+    - name: Add Nginx Config
+      template:
+        dest: /etc/nginx/sites-available/default
+        src: ./templates/nginx.conf
+    - name: Enable New Nginx Config
+      file:
+        dest: /etc/nginx/sites-enabled/default
+        src: /etc/nginx/sites-available/default
+        state: link
+    - name: Reload Nginx
+      service:
+        name: nginx
+        state: reloaded

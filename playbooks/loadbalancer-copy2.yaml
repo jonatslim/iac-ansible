@@ -1,0 +1,31 @@
+
+# for load balancer
+- hosts: loadbalancer
+  become: yes
+  # do nto gather facts for faster runs
+  gather_facts: no
+  tasks:
+    # is the docker running ? if yes, output will be error. If not, output will be the list of containers
+    - name: Has Running Docker Images
+      shell: docker ps -aq >/dev/null 2>&1
+      # capture output in a variable "containers_running"
+      register: containers_running
+      # ignoring error outputs
+      ignore_errors: yes
+    - debug: msg=”{{ containers_running }}”
+    # stop all the docker containers that are running ...
+    - name: Docker Stop Running Containers
+      when: containers_running.rc == 0
+      shell: docker stop $(docker ps -aq)
+    # remove the containers
+    - name: Docker Remove Previous Containers
+      when: containers_running.rc == 0
+      shell: docker rm $(docker ps -aq)
+    # run a nginx docker container
+    - name: Run Docker-based Nginx
+      shell: |
+        docker run \
+        --restart always \
+        -v /var/www/nginx.conf:/etc/nginx/conf.d/default.conf:ro \
+        -p 80:80 \
+        -d nginx

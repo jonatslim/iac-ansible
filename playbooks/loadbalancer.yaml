@@ -1,0 +1,46 @@
+
+# for load balancer
+- hosts: loadbalancer
+  become: yes
+  # do nto gather facts for faster runs
+  gather_facts: no
+  # install dockers and remove nginx from server
+  roles:
+    - ./../roles/docker
+    - ./../roles/docker_containers
+  vars:
+    - nginx_config_dest: /var/www/nginx.conf
+  tasks:
+    # create directory
+    - name: Verify /var/www/ exists
+      file:
+        path: /var/www
+        state: directory
+        mode: 0755
+    # copy conf file to server directory
+    - name: Add Nginx Config
+      template:
+        src: ./../templates/nginx.conf
+        dest: "{{ nginx_config_dest }}"
+      register: nginx_conf_dict
+    # take the path where the fiel is copied. nginx_conf_dict = /var/www/nginx.conf
+    - debug: msg="{{ nginx_conf_dict }}"
+    # put the path into a var
+    - set_fact:
+        nginx_lb_conf_path: "{{ nginx_config_dest }}"
+    - debug: msg="{{ nginx_lb_conf_path }}"
+    - name: Debug Docker-based Nginx Conf
+      # declare variable
+      vars:
+        - _nginx_lb_path: /etc/nginx/conf.d/default.conf
+      # show that we can use dynamic path OR use the default in case the dynamic is empty.
+      debug: msg="{{ nginx_lb_conf_path | default(_nginx_lb_path) }}"
+    # trigger this task below when: nginx_conf_dict.changed == true
+    - name: Trigger Docker Container Changes?
+      when: nginx_conf_dict.changed == true
+      shell: echo "Triggering docker changes"
+      notify:
+      - docker stop containers
+      - docker remove containers
+      - docker run nginx lb
+      

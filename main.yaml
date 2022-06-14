@@ -1,0 +1,8 @@
+#import 3 playbook files and run them in series
+---
+#- name: Install Nginx
+#  import_playbook: ./playbooks/install-nginx.yaml
+- name: Update Webapps
+  import_playbook: ./playbooks/webapps.yaml
+- name: Configure LoadBalancer
+  import_playbook: ./playbooks/loadbalancer.yaml

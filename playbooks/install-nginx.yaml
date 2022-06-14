@@ -1,0 +1,13 @@
+# install-nginx.yaml - just install nginx
+---
+- hosts: all
+  become: yes
+  # do nto gather facts for faster runs
+  gather_facts: no
+  tasks:
+    # apt - install sofwares
+    - name: Install Nginx
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
