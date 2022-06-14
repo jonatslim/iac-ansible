@@ -4,3 +4,7 @@
     name: nginx
     state: present
     update_cache: yes
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded
