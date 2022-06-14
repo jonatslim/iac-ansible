@@ -51,7 +51,8 @@ jobs:
           remote_user=”root”
           retries=2
           host_key_checking=False
-          ansible_ssh_private_key_file=private.pem
+          private_key_file = ./private.pem
+          EOF
       - name: Run main playbook
         run: |
           ansible-playbook main.yaml
