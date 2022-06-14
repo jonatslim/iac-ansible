@@ -1,0 +1,47 @@
+# ansible webapps.yaml file.
+---
+- hosts: webapps
+  become: yes
+  # do nto gather facts for faster runs
+  gather_facts: no
+  #vars are the variables used in a template
+  vars:
+    # source directory path
+    root_dir: "./../../../"
+    # desti= directory path
+    dest_dir: /var/www
+    # app name as a var
+    docker_app_name: app
+  # roles install the nginx found ..\roles\nginx\tasks. I think roles are useless. better use playbook instead.
+  roles:
+    # remove nginx and install dockers by default
+    - ./../roles/nginx_purge
+    - ./../roles/docker
+    - ./../roles/docker_containers
+  tasks:
+    # create the directory.
+    - name: Setup /var/www/src
+      file:
+        path: "{{ dest_dir }}/src"
+        state: directory
+        mode: 0755
+    - name: Copy Src folder
+      copy:
+        src: "{{ root_dir }}/src/"
+        dest: "{{ dest_dir }}/src/"
+    - copy:
+        # create the 3 files needed
+        src: "{{ root_dir }}/{{ item }}"
+        dest: "{{ dest_dir }}"
+      with_items:
+        - Dockerfile
+        - requirements.txt
+        - entrypoint.sh
+    - name: Trigger Build & Run
+      shell: echo “Running build”
+      # when: (app_files.changed) or (app_folder.changed)
+      notify:
+        - docker build
+        - docker stop containers
+        - docker remove containers
+        - docker run app
