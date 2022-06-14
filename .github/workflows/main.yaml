@@ -43,7 +43,7 @@ jobs:
           EOF
       - name: Add PEM Key Path to Ansible Config
         run: |
-          cat << EOF > ansible.cfg
+          cat << EOF > ansible2.cfg
           [defaults]
           ansible_python_interpreter='/usr/bin/python3'
           deprecation_warnings=False
@@ -53,6 +53,10 @@ jobs:
           host_key_checking=False
           private_key_file = ./private.pem
           EOF
+      - name: check the contents of ansible.cfg and ansible2.cfg
+        run: |
+          cat ansible.cfg
+          cat ansible2.cfg
       - name: Run main playbook
         run: |
           ansible-playbook main.yaml
