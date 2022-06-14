@@ -31,32 +31,6 @@ jobs:
       - name: Update key permissions
         run: |
           chmod 400 private.pem
-      - name: Create inventory file
-        run: |
-          cat << EOF > inventory.ini
-          [loadbalancer]
-          ${{ secrets.LOAD_BALANCER_IP }}
-          [webapps]
-          ${{ secrets.WEB_APP_1_IP }}
-          ${{ secrets.WEB_APP_2_IP }}
-          ${{ secrets.WEB_APP_3_IP }}
-          EOF
-      - name: Add PEM Key Path to Ansible Config
-        run: |
-          cat << EOF > ansible2.cfg
-          [defaults]
-          ansible_python_interpreter='/usr/bin/python3'
-          deprecation_warnings=False
-          inventory=./inventory.ini
-          remote_user=”root”
-          retries=2
-          host_key_checking=False
-          private_key_file = ./private.pem
-          EOF
-      - name: check the contents of ansible.cfg and ansible2.cfg
-        run: |
-          cat ansible.cfg
-          cat ansible2.cfg
       - name: Run main playbook
         run: |
           ansible-playbook main.yaml
